@@ -461,6 +461,9 @@ Route::group(['prefix' => 'v2', 'middleware' => ['app_language']], function () {
         Route::get('file/all', 'index');
         Route::get('file/delete/{id}', 'destroy');
     });
+
+    // Zapier Webhooks
+    Route::post('zapier/webhook', 'App\Http\Controllers\Api\V2\ZapierController@handleWebhook')->name('api.zapier.webhook');
 });
 
 Route::fallback(function () {
