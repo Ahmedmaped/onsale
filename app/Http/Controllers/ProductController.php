@@ -267,46 +267,7 @@ class ProductController extends Controller
             'discount_end_date' => $product->discount_end_date,
             'current_stock' => $product->current_stock,
             'description' => $product->description,
-            'photos' => $product->photos,
-            'thumbnail_img' => $product->thumbnail_img,
-            'meta_title' => $product->meta_title,
-            'meta_description' => $product->meta_description,
-            'meta_img' => $product->meta_img,
-            'min_qty' => $product->min_qty,
-            'low_stock_quantity' => $product->low_stock_quantity,
-            'stock_visibility_state' => $product->stock_visibility_state,
-            'cash_on_delivery' => $product->cash_on_delivery,
-            'est_shipping_days' => $product->est_shipping_days,
-            'tax' => $product->tax,
-            'tax_type' => $product->tax_type,
-            'vat' => $product->vat,
-            'vat_type' => $product->vat_type,
-            'user_id' => $product->user_id,
-            'rating' => $product->rating,
-            'num_of_sale' => $product->num_of_sale,
-            'featured' => $product->featured,
-            'todays_deal' => $product->todays_deal,
-            'published' => $product->published,
-            'approved' => $product->approved,
-            'status' => $product->status,
-            'created_at' => $product->created_at,
-            'updated_at' => $product->updated_at,
-            'category' => $product->category ? [
-                'id' => $product->category->id,
-                'name' => $product->category->name,
-                'slug' => $product->category->slug
-            ] : null,
-            'brand' => $product->brand ? [
-                'id' => $product->brand->id,
-                'name' => $product->brand->name,
-                'logo' => $product->brand->logo
-            ] : null,
-            'seller' => [
-                'id' => $product->user->id,
-                'name' => $product->user->name,
-                'email' => $product->user->email,
-                'phone' => $product->user->phone
-            ]
+            'created_at' => $product->created_at
         ]);
 
         return redirect()->route('products.admin');
