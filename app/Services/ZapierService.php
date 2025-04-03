@@ -27,6 +27,10 @@ class ZapierService
                 return false;
             }
 
+            // تحويل التواريخ إلى تنسيق ISO
+            // Convert dates to ISO format
+            $data = $this->formatDates($data);
+
             Log::info('Sending event to Zapier', [
                 'url' => $this->webhookUrl,
                 'event' => $event,
@@ -35,7 +39,9 @@ class ZapierService
 
             $response = Http::post($this->webhookUrl, [
                 'event' => $event,
-                'data' => $data
+                'data' => $data,
+                'timestamp' => now()->toIso8601String(),
+                'source' => 'onsaler'
             ]);
 
             if (!$response->successful()) {
@@ -61,5 +67,19 @@ class ZapierService
             ]);
             return false;
         }
+    }
+
+    private function formatDates($data)
+    {
+        if (is_array($data)) {
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    $data[$key] = $this->formatDates($value);
+                } elseif ($value instanceof \DateTime) {
+                    $data[$key] = $value->toIso8601String();
+                }
+            }
+        }
+        return $data;
     }
 } 
