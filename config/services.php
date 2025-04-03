@@ -63,4 +63,8 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
 
+    'zapier' => [
+        'webhook_url' => env('ZAPIER_WEBHOOK_URL'),
+    ],
+
 ];
