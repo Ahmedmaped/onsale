@@ -11,11 +11,11 @@ class ZapierService
 
     public function __construct()
     {
-        $this->webhookUrl = config('services.zapier.webhook_url');
+        $this->webhookUrl = env('ZAPIER_WEBHOOK_URL');
         
         if (empty($this->webhookUrl)) {
-            Log::error('Zapier webhook URL is not configured');
-            throw new \RuntimeException('Zapier webhook URL is not configured');
+            Log::error('Zapier webhook URL is not configured in .env file');
+            throw new \RuntimeException('Zapier webhook URL is not configured in .env file');
         }
     }
 
@@ -26,6 +26,12 @@ class ZapierService
                 Log::error('Cannot send event: Webhook URL is empty');
                 return false;
             }
+
+            Log::info('Sending event to Zapier', [
+                'url' => $this->webhookUrl,
+                'event' => $event,
+                'data' => $data
+            ]);
 
             $response = Http::post($this->webhookUrl, [
                 'event' => $event,
@@ -40,6 +46,11 @@ class ZapierService
                 ]);
                 return false;
             }
+
+            Log::info('Event sent successfully to Zapier', [
+                'event' => $event,
+                'response' => $response->body()
+            ]);
 
             return true;
         } catch (\Exception $e) {
