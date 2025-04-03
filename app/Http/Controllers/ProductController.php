@@ -27,6 +27,7 @@ use App\Services\FrequentlyBoughtProductService;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
+use App\Services\ZapierService;
 
 class ProductController extends Controller
 {
@@ -35,19 +36,22 @@ class ProductController extends Controller
     protected $productFlashDealService;
     protected $productStockService;
     protected $frequentlyBoughtProductService;
+    protected $zapierService;
 
     public function __construct(
         ProductService $productService,
         ProductTaxService $productTaxService,
         ProductFlashDealService $productFlashDealService,
         ProductStockService $productStockService,
-        FrequentlyBoughtProductService $frequentlyBoughtProductService
+        FrequentlyBoughtProductService $frequentlyBoughtProductService,
+        ZapierService $zapierService
     ) {
         $this->productService = $productService;
         $this->productTaxService = $productTaxService;
         $this->productFlashDealService = $productFlashDealService;
         $this->productStockService = $productStockService;
         $this->frequentlyBoughtProductService = $frequentlyBoughtProductService;
+        $this->zapierService = $zapierService;
 
         // Staff Permission Check
         $this->middleware(['permission:add_new_product'])->only('create');
@@ -250,6 +254,15 @@ class ProductController extends Controller
         Artisan::call('view:clear');
         Artisan::call('cache:clear');
 
+        // Send event to Zapier
+        $this->zapierService->sendEvent('product.created', [
+            'product_id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->unit_price,
+            'description' => $product->description,
+            'created_at' => $product->created_at
+        ]);
+
         return redirect()->route('products.admin');
     }
 
@@ -371,6 +384,16 @@ class ProductController extends Controller
 
         Artisan::call('view:clear');
         Artisan::call('cache:clear');
+
+        // Send event to Zapier
+        $this->zapierService->sendEvent('product.updated', [
+            'product_id' => $product->id,
+            'name' => $product->name,
+            'price' => $product->unit_price,
+            'description' => $product->description,
+            'updated_at' => $product->updated_at
+        ]);
+
         if($request->has('tab') && $request->tab != null){
             return Redirect::to(URL::previous() . "#" . $request->tab);
         }
@@ -403,6 +426,12 @@ class ProductController extends Controller
 
             Artisan::call('view:clear');
             Artisan::call('cache:clear');
+
+            // Send event to Zapier
+            $this->zapierService->sendEvent('product.deleted', [
+                'product_id' => $id,
+                'deleted_at' => now()
+            ]);
 
             return back();
         } else {

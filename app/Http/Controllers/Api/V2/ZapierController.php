@@ -16,9 +16,12 @@ use App\Models\CombinedOrder;
 use App\Models\CustomerPackage;
 use App\Models\SellerPackage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class ZapierController extends Controller
 {
+    private $zapierWebhookUrl = 'https://hooks.zapier.com/hooks/catch/22304703/2cfvajq/';
+
     public function __construct()
     {
         $this->middleware('zapier.auth');
@@ -26,14 +29,24 @@ class ZapierController extends Controller
 
     public function handleWebhook(Request $request)
     {
-        // Verify Zapier webhook signature
-        if (!$this->verifyZapierSignature($request)) {
-            return response()->json(['message' => 'Invalid signature'], 401);
-        }
-
         $event = $request->input('event');
         $data = $request->input('data');
 
+        // Forward the webhook to Zapier
+        $response = Http::post($this->zapierWebhookUrl, [
+            'event' => $event,
+            'data' => $data
+        ]);
+
+        if (!$response->successful()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to forward webhook to Zapier',
+                'error' => $response->body()
+            ], 500);
+        }
+
+        // Process the event locally
         switch ($event) {
             case 'order.created':
                 return $this->handleOrderCreated($data);
@@ -68,15 +81,6 @@ class ZapierController extends Controller
             default:
                 return response()->json(['message' => 'Unsupported event type'], 400);
         }
-    }
-
-    private function verifyZapierSignature(Request $request)
-    {
-        $signature = $request->header('X-Zapier-Signature');
-        $payload = $request->getContent();
-        $expectedSignature = hash_hmac('sha256', $payload, env('ZAPIER_WEBHOOK_SECRET'));
-        
-        return hash_equals($expectedSignature, $signature);
     }
 
     private function handleOrderCreated($data)
